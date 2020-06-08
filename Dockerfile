@@ -20,7 +20,7 @@ ENV MC_PORT="25565" \
 
 ARG DEBIAN_FRONTEND="noninteractive"
 
-WORKDIR /config
+WORKDIR /var/lib/minecraft
 
 RUN apt-get update \
  && apt-get install --yes --no-install-recommends \
@@ -32,7 +32,7 @@ RUN apt-get update \
 COPY --from=builder /opt/minecraft/spigot-*.jar /opt/minecraft/
 COPY minecraft/ /etc/minecraft/
 
-VOLUME /config
+VOLUME /var/lib/minecraft
 
 EXPOSE ${MC_PORT}
 

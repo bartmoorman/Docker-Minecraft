@@ -1,15 +1,15 @@
 #!/bin/bash
-if [ ! -f /config/eula.txt ]; then
+if [ ! -f eula.txt ]; then
   $(which java) -jar /opt/minecraft/spigot-*.jar
 
   sed --in-place --regexp-extended \
   --expression 's/^(eula=).*/\1true/' \
-  /config/eula.txt
+  eula.txt
 fi
 
 sed --in-place --regexp-extended \
 --expresion "s/^(server-port=).*/\1${MC_PORT}/" \
-/config/server.properties
+server.properties
 
 exec $(which java) \
     -Xms${MC_MIN_MEM} \

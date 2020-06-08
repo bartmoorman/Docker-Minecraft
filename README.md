@@ -3,7 +3,7 @@
 docker run \
 --detach \
 --name minecraft \
---volume minecraft-config:/config \
+--volume minecraft-data:/var/lib/minecraft \
 bmoorman/minecraft:latest
 ```
 
@@ -15,8 +15,8 @@ services:
     image: bmoorman/minecraft:latest
     container_name: minecraft
     volumes:
-      - minecraft-config:/config
+      - minecraft-datag:/var/lib/minecraft
 
 volumes:
-  minecraft-config:
+  minecraft-data:
 ```
