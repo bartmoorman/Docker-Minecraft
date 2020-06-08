@@ -10,7 +10,7 @@ RUN apt-get update \
     openjdk-8-jdk-headless \
     wget \
  && wget --quiet "https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar" \
- && java -jar BuildTools.jar
+ && java -jar BuildTools.jar --rev ${DOCKER_TAG:-latest}
 
 FROM bmoorman/ubuntu:bionic
 
