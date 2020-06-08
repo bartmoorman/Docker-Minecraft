@@ -8,7 +8,7 @@ if [ ! -f eula.txt ]; then
 fi
 
 sed --in-place --regexp-extended \
---expresion "s/^(server-port=).*/\1${MC_PORT}/" \
+--expression "s/^(server-port=).*/\1${MC_PORT}/" \
 server.properties
 
 exec $(which java) \
