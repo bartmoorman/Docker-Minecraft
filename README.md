@@ -15,7 +15,7 @@ services:
     image: bmoorman/minecraft:latest
     container_name: minecraft
     volumes:
-      - minecraft-datag:/var/lib/minecraft
+      - minecraft-data:/var/lib/minecraft
 
 volumes:
   minecraft-data:
