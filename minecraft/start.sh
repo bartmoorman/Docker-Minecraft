@@ -9,6 +9,7 @@ fi
 
 sed --in-place --regexp-extended \
 --expression "s/^(server-port=).*/\1${MC_PORT}/" \
+--expression "s/^(level-seed=).*/\1${MC_SEED}/" \
 server.properties
 
 exec $(which java) \
