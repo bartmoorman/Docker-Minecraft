@@ -25,6 +25,7 @@ WORKDIR /var/lib/minecraft
 RUN apt-get update \
  && apt-get install --yes --no-install-recommends \
     openjdk-8-jdk-headless \
+    vim \
  && apt-get autoremove --yes --purge \
  && apt-get clean \
  && rm --recursive --force /var/lib/apt/lists/* /tmp/* /var/tmp/*
