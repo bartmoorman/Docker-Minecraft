@@ -14,7 +14,7 @@ for FILE in eula.txt server.properties; do
       echo -e "\t${KEY}=${!VAR}"
 
       sed --in-place --regexp-extended \
-      --expression 's/^(${KEY}=).*/\1${!VAR}/' \
+      --expression "s/^(${KEY}=).*/\1${!VAR}/" \
       ${FILE}
 
       CHANGED=true
@@ -32,6 +32,6 @@ exec $(which java) \
     -XX:+UseConcMarkSweepGC \
     -XX:+CMSIncrementalPacing \
     -XX:+AggressiveOpts \
-    ${MC_JAVA_OPTS} \
+    ${MC_JAVA_ARGS} \
     -jar /opt/minecraft/spigot-*.jar \
     nogui
