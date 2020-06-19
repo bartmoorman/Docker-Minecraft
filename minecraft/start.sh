@@ -1,16 +1,30 @@
 #!/bin/bash
-if [ ! -f eula.txt ]; then
+if [ ! -f eula.txt -o ! -f server.properties ]; then
   $(which java) -jar /opt/minecraft/spigot-*.jar
-
-  sed --in-place --regexp-extended \
-  --expression 's/^(eula=).*/\1true/' \
-  eula.txt
 fi
 
-sed --in-place --regexp-extended \
---expression "s/^(server-port=).*/\1${MC_PORT}/" \
---expression "s/^(level-seed=).*/\1${MC_SEED}/" \
-server.properties
+for FILE in eula.txt server.properties; do
+  echo "Updating ${FILE}:"
+  CHANGED=false
+
+  for KEY in $(grep ^[[:lower:]] ${FILE} | cut -d= -f1); do
+    VAR="MC_$(tr [:punct:] _ <<< ${KEY} | tr [:lower:] [:upper:])"
+
+    if [ -v ${VAR} ]; then
+      echo -e "\t${KEY}=${!VAR}"
+
+      sed --in-place --regexp-extended \
+      --expression 's/^(${KEY}=).*/\1${!VAR}/' \
+      ${FILE}
+
+      CHANGED=true
+    fi
+  done
+
+  if [ ${CHANGED} = false ]; then
+    echo -e '\tNothing changed!'
+  fi
+done
 
 exec $(which java) \
     -Xms${MC_MIN_MEM} \
@@ -18,5 +32,6 @@ exec $(which java) \
     -XX:+UseConcMarkSweepGC \
     -XX:+CMSIncrementalPacing \
     -XX:+AggressiveOpts \
+    ${MC_JAVA_OPTS} \
     -jar /opt/minecraft/spigot-*.jar \
     nogui

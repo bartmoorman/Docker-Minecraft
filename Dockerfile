@@ -14,7 +14,8 @@ RUN apt-get update \
 
 FROM bmoorman/ubuntu:bionic
 
-ENV MC_PORT="25565" \
+ENV MC_SERVER_PORT="25565" \
+    MC_RCON_PORT="25575" \
     MC_MIN_MEM="1G" \
     MC_MAX_MEM="2G"
 
@@ -35,6 +36,6 @@ COPY minecraft/ /etc/minecraft/
 
 VOLUME /var/lib/minecraft
 
-EXPOSE ${MC_PORT}
+EXPOSE ${MC_SERVER_PORT} ${MC_RCON_PORT}
 
 CMD ["/etc/minecraft/start.sh"]
