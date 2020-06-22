@@ -27,6 +27,7 @@ for FILE in eula.txt server.properties; do
 done
 
 exec $(which java) \
+    -Dserver.name=${MC_SERVER_NAME:-minecraft} \
     -Xms${MC_MIN_MEM} \
     -Xmx${MC_MAX_MEM} \
     -XX:+UseConcMarkSweepGC \
