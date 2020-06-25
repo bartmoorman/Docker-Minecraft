@@ -1,6 +1,7 @@
 FROM bmoorman/ubuntu:bionic AS builder
 
-ARG DEBIAN_FRONTEND="noninteractive"
+ARG DEBIAN_FRONTEND=noninteractive
+ARG DOCKER_TAG=latest
 
 WORKDIR /opt/minecraft
 
@@ -10,16 +11,13 @@ RUN apt-get update \
     openjdk-8-jdk-headless \
     wget \
  && wget --quiet "https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar" \
- && java -jar BuildTools.jar --rev ${DOCKER_TAG:-latest}
+ && java -jar BuildTools.jar --rev ${DOCKER_TAG}
 
 FROM bmoorman/ubuntu:bionic
 
-ENV MC_SERVER_PORT="25565" \
-    MC_RCON_PORT="25575" \
-    MC_MIN_MEM="1G" \
-    MC_MAX_MEM="2G"
-
-ARG DEBIAN_FRONTEND="noninteractive"
+ARG DEBIAN_FRONTEND=noninteractive
+ARG MC_SERVER_PORT=25565
+ARG MC_RCON_PORT=25575
 
 WORKDIR /var/lib/minecraft
 
