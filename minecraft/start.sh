@@ -11,7 +11,7 @@ for FILE in eula.txt server.properties; do
     VAR="MC_$(tr [:punct:] _ <<< ${KEY} | tr [:lower:] [:upper:])"
 
     if [ -v ${VAR} ]; then
-      echo -e "\t${KEY}=${!VAR}"
+      echo -e "\e[95m${KEY}\e[39m=\e[96m${!VAR}\e[39m"
 
       sed --in-place --regexp-extended \
       --expression "s/^(${KEY}=).*/\1${!VAR}/" \
@@ -22,7 +22,7 @@ for FILE in eula.txt server.properties; do
   done
 
   if [ ${CHANGED} = false ]; then
-    echo -e '\tNothing changed!'
+    echo -e '\t\e[93mNothing changed!\e[39m'
   fi
 done
 
