@@ -25,7 +25,7 @@ RUN apt-get update \
  && apt-get install --yes --no-install-recommends \
     curl \
     jq \
-    openjdk-8-jdk-headless \
+    openjdk-8-jre-headless \
     rsync \
     vim \
  && fileUrl=$(curl --silent --location "https://api.github.com/repos/itzg/rcon-cli/releases/latest" | jq --raw-output '.assets[] | select(.name | contains("linux_amd64.tar.gz")) | .browser_download_url') \
