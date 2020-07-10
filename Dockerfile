@@ -25,7 +25,6 @@ RUN apt-get update \
  && apt-get install --yes --no-install-recommends \
     curl \
     jq \
-    lsof \
     openjdk-8-jdk-headless \
     rsync \
     vim \
