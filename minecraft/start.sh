@@ -133,9 +133,9 @@ $(which java) \
 JAVA_PID=$!
 
 if [ ${FIRST_RUN:-false} == false ]; then
-    sleep 30s
+    sleep 1m
 else
-    sleep 2m
+    sleep 3m
 fi
 
 $(which sync.sh) -c &
