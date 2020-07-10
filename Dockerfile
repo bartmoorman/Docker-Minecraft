@@ -25,7 +25,9 @@ RUN apt-get update \
  && apt-get install --yes --no-install-recommends \
     curl \
     jq \
+    lsof \
     openjdk-8-jdk-headless \
+    rsync \
     vim \
  && fileUrl=$(curl --silent --location "https://api.github.com/repos/itzg/rcon-cli/releases/latest" | jq --raw-output '.assets[] | select(.name | contains("linux_amd64.tar.gz")) | .browser_download_url') \
  && curl --silent --location "${fileUrl}" | tar xz -C /usr/local/bin \
@@ -35,6 +37,7 @@ RUN apt-get update \
 
 COPY --from=builder /opt/minecraft/spigot-*.jar /opt/minecraft/
 COPY minecraft/ /etc/minecraft/
+COPY bin/ /usr/local/bin/
 
 VOLUME /var/lib/minecraft
 
