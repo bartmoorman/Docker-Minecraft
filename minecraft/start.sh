@@ -1,5 +1,13 @@
 #!/bin/bash
-if [ ${MC_EULA:-false} == true ] && [ ! -f eula.txt -o ! -f server.properties ]; then
+if [ ${MC_EULA:-false} != true ]; then
+    echo -e '\e[41m!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\e[49m'
+    echo -e '\e[41mMC_EULA must always be set to \e[46mtrue\e[41m.\e[49m'
+    echo -e '\e[41mPlease indicate you agree to the EULA (https://account.mojang.com/documents/minecraft_eula).\e[49m'
+    echo -e '\e[41m!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\e[49m'
+    exit
+fi
+
+if [ ! -f eula.txt -o ! -f server.properties ]; then
     echo -e '\e[44m##############################\e[49m'
     echo -e '\e[44mPerforming first-time setup.\e[49m'
     echo -e '\e[44mErrors and warnings regarding server.properties and/or eula.txt are expected.\e[49m'
@@ -7,11 +15,6 @@ if [ ${MC_EULA:-false} == true ] && [ ! -f eula.txt -o ! -f server.properties ];
     FIRST_RUN=true
 
     $(which java) -jar /opt/minecraft/spigot-*.jar
-else
-    echo -e '\e[41m!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\e[49m'
-    echo -e '\e[41mMC_EULA must be set to \e[96mtrue\e[39m.\e[49m'
-    echo -e '\e[41mPlease indicate you agree to the EULA (https://account.mojang.com/documents/minecraft_eula).\e[49m'
-    echo -e '\e[41m!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\e[49m'
 fi
 
 for FILE in eula.txt server.properties; do
@@ -94,7 +97,7 @@ for WORLD in ${LEVEL_NAME}{,_nether,_the_end}; do
     fi
 done
 
-shutdown() {
+doShutdown() {
     if kill -0 ${SYNC_PID}; then
         echo -en 'Stopping continuous sync...'
         kill ${SYNC_PID}
@@ -114,7 +117,9 @@ shutdown() {
     echo -e '\e[45mCLEAN SHUTDOWN ;)\e[49m'
 }
 
-trap 'shutdown' SIGTERM
+trap 'doShutdown' SIGTERM
+
+echo -e '\e[45mSTARTING SPIGOTMC\e[49m'
 
 $(which java) \
     -Dserver.name=${MC_SERVER_NAME:-minecraft} \
@@ -130,6 +135,8 @@ $(which java) \
 JAVA_PID=$!
 
 sleep 2m
+
+echo -e '\e[45mSTARTING CONTINUOUS SYNC\e[49m'
 
 $(which sync.sh) -c &
 
