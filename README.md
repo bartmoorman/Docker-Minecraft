@@ -4,6 +4,7 @@ docker run \
 --detach \
 --name minecraft \
 --restart unless-stopped \
+--publish 25565:25565 \
 --volume minecraft-data:/var/lib/minecraft \
 bmoorman/minecraft:latest
 ```
@@ -16,6 +17,8 @@ services:
     image: bmoorman/minecraft:latest
     container_name: minecraft
     restart: unless-stopped
+    ports:
+      - "25565:25565"
     volumes:
       - minecraft-data:/var/lib/minecraft
 
