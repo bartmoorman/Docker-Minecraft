@@ -119,7 +119,7 @@ doShutdown() {
 
 trap 'doShutdown' SIGTERM
 
-$(which java) \
+exec $(which java) \
     -Dserver.name=${MC_SERVER_NAME:-minecraft} \
     -Xms${MC_MIN_MEM:-1G} \
     -Xmx${MC_MAX_MEM:-2G} \
