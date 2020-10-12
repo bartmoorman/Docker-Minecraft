@@ -16,7 +16,7 @@ doSync() {
 }
 
 if [ ${MC_WORLDS_IN_RAM:-false} == true ]; then
-    LEVEL_NAME=$(grep ^level-name server.properties | cut -d= -f2)
+    LEVEL_NAME=${MC_LEVEL_NAME:-world}
 
     if [ ${CONTINUOUS:-false} == true ]; then
         while true; do

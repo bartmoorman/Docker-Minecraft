@@ -28,7 +28,7 @@ for FILE in eula.txt server.properties; do
             echo -e "\t\e[95m${KEY}\e[39m=\e[96m${!VAR}\e[39m"
 
             sed --in-place --regexp-extended \
-            --expression "s/^(${KEY}=).*/\1${!VAR}/" \
+            --expression "s|^(${KEY}=).*|\1${!VAR}|" \
             ${FILE}
 
             FILE_CHANGED=true
@@ -40,7 +40,15 @@ for FILE in eula.txt server.properties; do
     fi
 done
 
-LEVEL_NAME=$(grep ^level-name server.properties | cut -d= -f2)
+if [ ${MC_ENABLE_RCON:-false} == true ]; then
+    cat << EOF > ~/.rcon-cli.yaml
+host: 127.0.0.1
+port: ${MC_RCON_PORT:-25575}
+password: ${MC_RCON_PASSWORD}
+EOF
+fi
+
+LEVEL_NAME=${MC_LEVEL_NAME:-world}
 
 for WORLD in ${LEVEL_NAME}{,_nether,_the_end}; do
     echo -e "Performing maintenance on \e[92m${WORLD}\e[39m:"
@@ -119,7 +127,7 @@ doShutdown() {
 
 trap 'doShutdown' SIGTERM
 
-exec $(which java) \
+$(which java) \
     -Dserver.name=${MC_SERVER_NAME:-minecraft} \
     -Xms${MC_MIN_MEM:-1G} \
     -Xmx${MC_MAX_MEM:-2G} \
@@ -132,10 +140,10 @@ exec $(which java) \
 
 JAVA_PID=$!
 
-if [ ${FIRST_RUN:-false} == false ]; then
-    sleep 1m
-else
+if [ ${FIRST_RUN:-false} == true ]; then
     sleep 3m
+else
+    sleep 1m
 fi
 
 $(which sync.sh) -c &

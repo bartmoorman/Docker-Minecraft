@@ -6,6 +6,8 @@ docker run \
 --restart unless-stopped \
 --publish 25565:25565 \
 --volume minecraft-data:/var/lib/minecraft \
+# optional - only needed if storing worlds in RAM
+# --shm-size 1G \
 bmoorman/minecraft:latest
 ```
 
@@ -21,6 +23,8 @@ services:
       - "25565:25565"
     volumes:
       - minecraft-data:/var/lib/minecraft
+    # optional - only needed if storing worlds in RAM
+    # shm_size: 1G
 
 volumes:
   minecraft-data:
