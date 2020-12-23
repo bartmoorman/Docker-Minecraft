@@ -1,7 +1,7 @@
 FROM bmoorman/ubuntu:bionic AS builder
 
-ARG DEBIAN_FRONTEND=noninteractive
-ARG MC_VERSION=latest
+ARG DEBIAN_FRONTEND=noninteractive \
+    MC_VERSION=latest
 
 WORKDIR /opt/minecraft
 
@@ -15,9 +15,9 @@ RUN apt-get update \
 
 FROM bmoorman/ubuntu:bionic
 
-ARG DEBIAN_FRONTEND=noninteractive
-ARG MC_SERVER_PORT=25565
-ARG MC_RCON_PORT=25575
+ARG DEBIAN_FRONTEND=noninteractive \
+    MC_SERVER_PORT=25565 \
+    MC_RCON_PORT=25575
 
 WORKDIR /var/lib/minecraft
 
