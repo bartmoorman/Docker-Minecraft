@@ -1,4 +1,4 @@
-FROM bmoorman/ubuntu:bionic
+FROM bmoorman/ubuntu:focal
 
 ARG DEBIAN_FRONTEND=noninteractive \
     MC_SERVER_PORT=25565 \
