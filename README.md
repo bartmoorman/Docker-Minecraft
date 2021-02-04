@@ -6,9 +6,7 @@ docker run \
 --restart unless-stopped \
 --publish 25565:25565 \
 --volume minecraft-data:/var/lib/minecraft \
-# optional - only needed if storing worlds in RAM
-# --shm-size 1G \
-bmoorman/minecraft:latest
+bmoorman/minecraft:spigot
 ```
 
 ### Docker Compose
@@ -16,15 +14,13 @@ bmoorman/minecraft:latest
 version: "3.7"
 services:
   minecraft:
-    image: bmoorman/minecraft:latest
+    image: bmoorman/minecraft:spigot
     container_name: minecraft
     restart: unless-stopped
     ports:
       - "25565:25565"
     volumes:
       - minecraft-data:/var/lib/minecraft
-    # optional - only needed if storing worlds in RAM
-    # shm_size: 1G
 
 volumes:
   minecraft-data:
@@ -35,8 +31,6 @@ volumes:
 |--------|-----------|-------|
 |TZ|Sets the timezone|`America/Denver`|
 |MC_SERVER_NAME|Sets an arbitrary java arg for identifying a process - useful when running multiple servers|`minecraft`|
-|MC_WORLDS_IN_RAM|Setting to `true` will copy worlds to `/dev/shm` - shm size must be >= 1G|`false`|
-|MC_SYNC_INTERVAL|Sets the interval for syncing worlds in RAM to disk|`5m`|
 |MC_MIN_MEM|Sets the minimum RAM allocated to java|`1G`|
 |MC_MAX_MEM|Sets the maximum RAM allocated to java|`2G`|
 |MC_JAVA_ARGS|Sets custom args passed to java|`<empty>`|

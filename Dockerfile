@@ -36,7 +36,6 @@ RUN apt-get update \
 
 COPY --from=builder /opt/minecraft/spigot-*.jar /opt/minecraft/
 COPY minecraft/ /etc/minecraft/
-COPY bin/ /usr/local/bin/
 
 VOLUME /var/lib/minecraft
 
