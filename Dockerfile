@@ -1,4 +1,4 @@
-FROM bmoorman/ubuntu:bionic AS builder
+FROM bmoorman/ubuntu:focal AS builder
 
 ARG DEBIAN_FRONTEND=noninteractive \
     MC_VERSION=latest
@@ -13,7 +13,7 @@ RUN apt-get update \
  && wget --quiet "https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar" \
  && java -jar BuildTools.jar --rev ${MC_VERSION#*-}
 
-FROM bmoorman/ubuntu:bionic
+FROM bmoorman/ubuntu:focal
 
 ARG DEBIAN_FRONTEND=noninteractive \
     MC_SERVER_PORT=25565 \

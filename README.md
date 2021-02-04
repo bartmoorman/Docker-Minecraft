@@ -6,7 +6,7 @@ docker run \
 --restart unless-stopped \
 --publish 25565:25565 \
 --volume minecraft-data:/var/lib/minecraft \
-bmoorman/minecraft:spigot
+bmoorman/minecraft:spigot-latest
 ```
 
 ### Docker Compose
@@ -14,7 +14,7 @@ bmoorman/minecraft:spigot
 version: "3.7"
 services:
   minecraft:
-    image: bmoorman/minecraft:spigot
+    image: bmoorman/minecraft:spigot-latest
     container_name: minecraft
     restart: unless-stopped
     ports:
