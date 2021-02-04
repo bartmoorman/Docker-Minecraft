@@ -19,7 +19,7 @@ after_script:
 build:
   stage: build
   script:
-    - docker build --build-arg MC_VERSION=${CI_COMMIT_REF_NAME} --pull --tag ${DOCKER_HUB_IMAGE} --tag ${GITLAB_IMAGE} .
+    - docker build --pull --tag ${DOCKER_HUB_IMAGE} --tag ${GITLAB_IMAGE} .
 
 push:
   stage: push

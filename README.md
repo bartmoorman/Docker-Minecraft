@@ -34,9 +34,10 @@ volumes:
 |Variable|Description|Default|
 |--------|-----------|-------|
 |TZ|Sets the timezone|`America/Denver`|
+|MC_VERSION|Sets the Minecraft server version|`latest`|
+|MC_FABRIC|Set to true to enable Fabric|`false`|
+|MC_FABRIC_VERSION|Sets the Fabric version (if enabled)|`latest`|
 |MC_SERVER_NAME|Sets an arbitrary java arg for identifying a process - useful when running multiple servers|`minecraft`|
-|MC_WORLDS_IN_RAM|Setting to `true` will copy worlds to `/dev/shm` - shm size must be >= 1G|`false`|
-|MC_SYNC_INTERVAL|Sets the interval for syncing worlds in RAM to disk|`5m`|
 |MC_MIN_MEM|Sets the minimum RAM allocated to java|`1G`|
 |MC_MAX_MEM|Sets the maximum RAM allocated to java|`2G`|
 |MC_JAVA_ARGS|Sets custom args passed to java|`<empty>`|

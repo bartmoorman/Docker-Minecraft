@@ -7,35 +7,70 @@ if [ ${MC_EULA:-false} != true ]; then
     exit
 fi
 
+base=/opt/minecraft
+
+manifest=$(curl --silent --location "https://launchermeta.mojang.com/mc/game/version_manifest.json")
+latest=$(jq --raw-output '.latest.release' <<< ${manifest})
+: ${MC_VERSION:=${latest}}
+
+metadata=$(curl --silent --location "https://maven.fabricmc.net/net/fabricmc/fabric-installer/maven-metadata.xml")
+release=$(xgrep -t -x '//metadata/versioning/release/text()' <<< ${metadata})
+: ${MC_FABRIC_VERSION:=${release}}
+
+if [ ${MC_FABRIC:-false} == true ]; then
+    if [ ! -f ${base}/fabric-server-launch.jar -o ! -f ${base}/server.jar ]; then
+        fileUrl="https://maven.fabricmc.net/net/fabricmc/fabric-installer/${MC_FABRIC_VERSION}/fabric-installer-${MC_FABRIC_VERSION}.jar"
+        wget --quiet --directory-prefix ${base} "${fileUrl}"
+        java -jar ${base}/fabric-installer-${MC_FABRIC_VERSION}.jar server -dir ${base} -mcversion ${MC_VERSION} -downloadMinecraft
+    fi
+
+    if [ ! -f fabric-server-launcher.properties ]; then
+        echo "#$(date +'%a %b %d %H:%M:%S %Z %Y')" > fabric-server-launcher.properties
+        echo "serverJar=${base}/server.jar" >> fabric-server-launcher.properties
+    else
+        sed --in-place --regexp-extended \
+        --expression "s|^(serverJar=).*|\1${base}/server.jar|" \
+        fabric-server-launcher.properties
+    fi
+
+    jar=${base}/fabric-server-launch.jar
+else
+    if [ ! -f ${base}/server.jar ]; then
+        versionUrl=$(jq --raw-output --arg id ${MC_VERSION} '.versions[] | select(.id == $id) | .url' <<< ${manifest})
+        fileUrl=$(curl --silent --location "${versionUrl}" | jq --raw-output '.downloads.server.url')
+        wget --quiet --directory-prefix ${base} "${fileUrl}"
+    fi
+
+    jar=${base}/server.jar
+fi
+
 if [ ! -f eula.txt -o ! -f server.properties ]; then
     echo -e '\e[44m##############################\e[49m'
     echo -e '\e[44mPerforming first-time setup.\e[49m'
     echo -e '\e[44mErrors and warnings regarding server.properties and/or eula.txt are expected.\e[49m'
     echo -e '\e[44m##############################\e[49m'
-    FIRST_RUN=true
-
-    $(which java) -jar /opt/minecraft/spigot-*.jar
+    $(which java) -jar ${jar}
 fi
 
-for FILE in eula.txt server.properties; do
-    echo -e "Updating \e[94m${FILE}\e[39m:"
-    FILE_CHANGED=false
+for file in eula.txt server.properties; do
+    echo -e "Updating \e[94m${file}\e[39m:"
+    fileChanged=false
 
-    for KEY in $(grep ^[[:lower:]] ${FILE} | cut -d= -f1); do
-        VAR="MC_$(tr [:punct:] _ <<< ${KEY} | tr [:lower:] [:upper:])"
+    for key in $(grep ^[[:lower:]] ${file} | cut -d= -f1); do
+        var="MC_$(tr [:punct:] _ <<< ${key} | tr [:lower:] [:upper:])"
 
-        if [ -v ${VAR} ]; then
-            echo -e "\t\e[95m${KEY}\e[39m=\e[96m${!VAR}\e[39m"
+        if [ -v ${var} ]; then
+            echo -e "\t\e[95m${key}\e[39m=\e[96m${!var}\e[39m"
 
             sed --in-place --regexp-extended \
-            --expression "s|^(${KEY}=).*|\1${!VAR}|" \
-            ${FILE}
+            --expression "s|^(${key}=).*|\1${!var}|" \
+            ${file}
 
-            FILE_CHANGED=true
+            fileChanged=true
         fi
     done
 
-    if [ ${FILE_CHANGED} == false ]; then
+    if [ ${fileChanged} == false ]; then
         echo -e '\t\e[93mNothing changed!\e[39m'
     fi
 done
@@ -48,86 +83,7 @@ password: ${MC_RCON_PASSWORD}
 EOF
 fi
 
-LEVEL_NAME=${MC_LEVEL_NAME:-world}
-
-for WORLD in ${LEVEL_NAME}{,_nether,_the_end}; do
-    echo -e "Performing maintenance on \e[92m${WORLD}\e[39m:"
-    WORLD_CHANGED=false
-
-    if [ -d ${WORLD} -a ! -L ${WORLD} ]; then
-        echo -en "\tMoving to \e[94mworldstore\e[39m..."
-        rsync --archive --remove-source-files ${WORLD} worldstore
-        find ${WORLD} -type d -empty -delete
-        echo -e '\e[42mdone\e[49m'
-        WORLD_CHANGED=true
-    elif [ ! -d worldstore/${WORLD} ]; then
-        if [ ${FIRST_RUN:-false} == true ]; then
-            echo -e "\t\e[93mSkipping. Please restart the container after worlds are generated.\e[39m"
-        else
-            echo -e "\t\e[93mCannot find directory! Skipping.\e[39m"
-        fi
-        continue
-    fi
-
-    if [ ${MC_WORLDS_IN_RAM:-false} == true ]; then
-        echo -en "\tSyncing to \e[94m/dev/shm/$(hostname)\e[39m..."
-        SHM_SIZE=$(df --output=size /dev/shm | sed 1d)
-        SHM_MIN=$((1024 * 1024))
-        SHM_AVAIL=$(df --output=avail /dev/shm | sed 1d)
-        WORLD_SIZE=$(du --summarize worldstore/${WORLD} | cut -f1)
-        REQD_AVAIL=$((${WORLD_SIZE} * 120 / 100))
-
-        if [ ${SHM_SIZE} -ge ${SHM_MIN} -a ${SHM_AVAIL} -ge ${REQD_AVAIL} ]; then
-            rsync --archive worldstore/${WORLD} /dev/shm/$(hostname)
-            ln --symbolic --force /dev/shm/$(hostname)/${WORLD}
-            echo -e '\e[42mdone\e[49m'
-
-            WORLD_CHANGED=true
-        else
-            echo -e '\e[41mfailed\e[49m'
-            SHM_DIFF=$((${SHM_MIN} - ${SHM_SIZE}))
-            REQD_DIFF=$((${REQD_AVAIL} - ${SHM_AVAIL}))
-
-            if [ ${SHM_DIFF} -ge ${REQD_DIFF} ]; then
-                echo -e "\t\t\e[94m/dev/shm\e[93m must be a minumum of ${SHM_MIN}K (\e[91m${SHM_DIFF}K needed\e[93m).\e[39m"
-            else
-                echo -e "\t\t\e[94m/dev/shm\e[93m does not have enough free space (\e[91m${REQD_DIFF}K needed\e[93m)).\e[39m"
-            fi
-
-            ln --symbolic --force worldstore/${WORLD}
-        fi
-    else
-        ln --symbolic --force worldstore/${WORLD}
-    fi
-
-    if [ ${WORLD_CHANGED} == false ]; then
-        echo -e '\t\e[93mNothing changed!\e[39m'
-    fi
-done
-
-doShutdown() {
-    if [ -d /proc/${SYNC_PID} ]; then
-        echo -en 'Stopping continuous sync...'
-        kill ${SYNC_PID}
-        wait ${SYNC_PID}
-        echo -e '\e[42mdone\e[49m'
-    fi
-
-    echo -en 'Stopping SpigotMC...'
-    kill ${JAVA_PID}
-    wait ${JAVA_PID}
-    echo -e '\e[42mdone\e[49m'
-
-    echo -en 'Performing final sync...'
-    $(which sync.sh)
-    echo -e '\e[42mdone\e[49m'
-
-    echo -e '\e[45mCLEAN SHUTDOWN :D\e[49m'
-}
-
-trap 'doShutdown' SIGTERM
-
-$(which java) \
+exec $(which java) \
     -Dserver.name=${MC_SERVER_NAME:-minecraft} \
     -Xms${MC_MIN_MEM:-1G} \
     -Xmx${MC_MAX_MEM:-2G} \
@@ -150,19 +106,5 @@ $(which java) \
     -XX:+PerfDisableSharedMem \
     -XX:MaxTenuringThreshold=1 \
     ${MC_JAVA_ARGS} \
-    -jar /opt/minecraft/spigot-*.jar \
-    nogui &
-
-JAVA_PID=$!
-
-if [ ${FIRST_RUN:-false} == true ]; then
-    sleep 3m
-else
-    sleep 1m
-fi
-
-$(which sync.sh) -c &
-
-SYNC_PID=$!
-
-wait
+    -jar ${jar} \
+    nogui
