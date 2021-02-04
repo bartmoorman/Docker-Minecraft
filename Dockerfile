@@ -11,7 +11,7 @@ RUN apt-get update \
     openjdk-8-jdk-headless \
     wget \
  && wget --quiet "https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar" \
- && java -jar BuildTools.jar --rev ${MC_VERSION}
+ && java -jar BuildTools.jar --rev ${MC_VERSION#*-}
 
 FROM bmoorman/ubuntu:bionic
 
