@@ -1,4 +1,4 @@
-FROM bmoorman/ubuntu:focal AS builder
+FROM bmoorman/ubuntu:bionic AS builder
 
 ARG DEBIAN_FRONTEND=noninteractive \
     MC_VERSION=latest
@@ -11,24 +11,26 @@ RUN apt-get update \
     openjdk-8-jdk-headless \
     wget \
  && wget --quiet "https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar" \
- && java -jar BuildTools.jar --rev ${MC_VERSION#*-}
+ && java -jar -Xms512M -Xmx1024M BuildTools.jar --rev ${MC_VERSION#*-}
 
-FROM bmoorman/ubuntu:focal
+FROM bmoorman/ubuntu:bionic
 
 ARG DEBIAN_FRONTEND=noninteractive \
     MC_SERVER_PORT=25565 \
-    MC_RCON_PORT=25575
+    MC_RCON_PORT=25575 \
+    TARGETARCH \
+    TARGETVARIANT
 
 WORKDIR /var/lib/minecraft
 
 RUN apt-get update \
  && apt-get install --yes --no-install-recommends \
-    curl \
     jq \
     openjdk-8-jre-headless \
     rsync \
     vim \
- && fileUrl=$(curl --silent --location "https://api.github.com/repos/itzg/rcon-cli/releases/latest" | jq --raw-output '.assets[] | select(.name | contains("linux_amd64.tar.gz")) | .browser_download_url') \
+ && arch=${TARGETARCH}${TARGETVARIANT} \
+ && fileUrl=$(curl --silent --location "https://api.github.com/repos/itzg/rcon-cli/releases/latest" | jq --arg arch ${arch} --raw-output '.assets[] | select(.name | endswith("linux_" + $arch + ".tar.gz")) | .browser_download_url') \
  && curl --silent --location "${fileUrl}" | tar xz -C /usr/local/bin \
  && apt-get autoremove --yes --purge \
  && apt-get clean \
