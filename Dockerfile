@@ -2,19 +2,21 @@ FROM bmoorman/ubuntu:focal
 
 ARG DEBIAN_FRONTEND=noninteractive \
     MC_SERVER_PORT=25565 \
-    MC_RCON_PORT=25575
+    MC_RCON_PORT=25575 \
+    TARGETARCH \
+    TARGETVARIANT
 
 WORKDIR /var/lib/minecraft
 
 RUN apt-get update \
  && apt-get install --yes --no-install-recommends \
-    curl \
     jq \
     openjdk-8-jre-headless \
     vim \
     wget \
     xgrep \
- && fileUrl=$(curl --silent --location "https://api.github.com/repos/itzg/rcon-cli/releases/latest" | jq --raw-output '.assets[] | select(.name | contains("linux_amd64.tar.gz")) | .browser_download_url') \
+ && arch=${TARGETARCH}${TARGETVARIANT} \
+ && fileUrl=$(curl --silent --location "https://api.github.com/repos/itzg/rcon-cli/releases/latest" | jq --arg arch ${arch} --raw-output '.assets[] | select(.name | endswith("linux_" + $arch + ".tar.gz")) | .browser_download_url') \
  && curl --silent --location "${fileUrl}" | tar xz -C /usr/local/bin \
  && apt-get autoremove --yes --purge \
  && apt-get clean \
