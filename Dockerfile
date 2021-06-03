@@ -10,8 +10,8 @@ WORKDIR /var/lib/minecraft
 
 RUN apt-get update \
  && apt-get install --yes --no-install-recommends \
+    default-jre-headless \
     jq \
-    openjdk-8-jre-headless \
     vim \
     wget \
     xgrep \
