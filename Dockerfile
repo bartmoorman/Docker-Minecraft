@@ -7,8 +7,8 @@ WORKDIR /opt/minecraft
 
 RUN apt-get update \
  && apt-get install --yes --no-install-recommends \
+    default-jdk-headless \
     git \
-    openjdk-8-jdk-headless \
     wget \
  && wget --quiet "https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar" \
  && java -jar -Xms512M -Xmx1024M BuildTools.jar --rev ${MC_VERSION#*-}
@@ -25,8 +25,8 @@ WORKDIR /var/lib/minecraft
 
 RUN apt-get update \
  && apt-get install --yes --no-install-recommends \
+    default-jre-headless \
     jq \
-    openjdk-8-jre-headless \
     vim \
  && arch=${TARGETARCH}${TARGETVARIANT} \
  && fileUrl=$(curl --silent --location "https://api.github.com/repos/itzg/rcon-cli/releases/latest" | jq --arg arch ${arch} --raw-output '.assets[] | select(.name | endswith("linux_" + $arch + ".tar.gz")) | .browser_download_url') \
