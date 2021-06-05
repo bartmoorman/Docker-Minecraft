@@ -9,18 +9,36 @@ fi
 
 base=/opt/minecraft
 
+echo -n 'Fetching Minecraft version manifest ... '
 manifest=$(curl --silent --location "https://launchermeta.mojang.com/mc/game/version_manifest.json")
-latest=$(jq --raw-output '.latest.release' <<< ${manifest})
-: ${MC_VERSION:=${latest}}
+echo 'done'
 
-metadata=$(curl --silent --location "https://maven.fabricmc.net/net/fabricmc/fabric-installer/maven-metadata.xml")
-release=$(xgrep -t -x '//metadata/versioning/release/text()' <<< ${metadata})
-: ${MC_FABRIC_VERSION:=${release}}
+if [ ${MC_VERSION:-latest} == latest ]; then
+    echo -n 'Identifying latest Minecraft version ... '
+    MC_VERSION=$(jq --raw-output '.latest.release' <<< ${manifest})
+    echo "${MC_VERSION}"
+fi
 
 if [ ${MC_FABRIC:-false} == true ]; then
-    if [ ! -f ${base}/fabric-server-launch.jar -o ! -f ${base}/server.jar ]; then
+    echo -n 'Fetching Fabric installer metadata ... '
+    metadata=$(curl --silent --location "https://maven.fabricmc.net/net/fabricmc/fabric-installer/maven-metadata.xml")
+    echo 'done'
+
+    if [ ${MC_FABRIC_VERSION:-latest} == latest ]; then
+      echo -n 'Identifying latest Fabric installer version ... '
+      MC_FABRIC_VERSION=$(xgrep -t -x '//metadata/versioning/release/text()' <<< ${metadata})
+      echo "${MC_FABRIC_VERSION}"
+    fi
+
+    if [ ! -f ${base}/fabric-installer-${MC_FABRIC_VERSION}.jar ]; then
+        echo -n "Downloading Fabric ${MC_FABRIC_VERSION} installer ... "
         fileUrl="https://maven.fabricmc.net/net/fabricmc/fabric-installer/${MC_FABRIC_VERSION}/fabric-installer-${MC_FABRIC_VERSION}.jar"
         wget --quiet --directory-prefix ${base} "${fileUrl}"
+        echo 'done'
+    fi
+
+    if [ ! -f ${base}/fabric-server-launch.jar -o ! -f ${base}/server.jar ]; then
+        echo "Installing Fabric ... "
         java -jar ${base}/fabric-installer-${MC_FABRIC_VERSION}.jar server -dir ${base} -mcversion ${MC_VERSION} -downloadMinecraft
     fi
 
@@ -36,9 +54,11 @@ if [ ${MC_FABRIC:-false} == true ]; then
     jar=${base}/fabric-server-launch.jar
 else
     if [ ! -f ${base}/server.jar ]; then
+        echo -n "Downloading Minecraft ${MC_VERSION} ... "
         versionUrl=$(jq --raw-output --arg id ${MC_VERSION} '.versions[] | select(.id == $id) | .url' <<< ${manifest})
         fileUrl=$(curl --silent --location "${versionUrl}" | jq --raw-output '.downloads.server.url')
         wget --quiet --directory-prefix ${base} "${fileUrl}"
+        echo 'done'
     fi
 
     jar=${base}/server.jar
@@ -49,7 +69,7 @@ if [ ! -f eula.txt -o ! -f server.properties ]; then
     echo -e '\e[44mPerforming first-time setup.\e[49m'
     echo -e '\e[44mErrors and warnings regarding server.properties and/or eula.txt are expected.\e[49m'
     echo -e '\e[44m##############################\e[49m'
-    $(which java) -jar ${jar}
+    $(which java) -jar ${jar} --initSettings
 fi
 
 for file in eula.txt server.properties; do
@@ -107,4 +127,4 @@ exec $(which java) \
     -XX:MaxTenuringThreshold=1 \
     ${MC_JAVA_ARGS} \
     -jar ${jar} \
-    nogui
+    --nogui
