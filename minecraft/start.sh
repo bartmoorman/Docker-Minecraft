@@ -71,4 +71,4 @@ exec $(which java) \
     -XX:MaxTenuringThreshold=1 \
     ${MC_JAVA_ARGS} \
     -jar /opt/minecraft/spigot-*.jar \
-    nogui
+    --nogui
