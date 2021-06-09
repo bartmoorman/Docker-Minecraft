@@ -16,52 +16,19 @@ echo 'done'
 if [ ${MC_VERSION:-latest} == latest ]; then
     echo -n 'Identifying latest Minecraft version ... '
     MC_VERSION=$(jq --raw-output '.latest.release' <<< ${manifest})
-    echo "${MC_VERSION}"
+    echo "done (${MC_VERSION})"
 fi
 
-if [ ${MC_FABRIC:-false} == true ]; then
-    echo -n 'Fetching Fabric installer metadata ... '
-    metadata=$(curl --silent --location "https://maven.fabricmc.net/net/fabricmc/fabric-installer/maven-metadata.xml")
+flavor="Vanilla Minecraft ${MC_VERSION}"
+jar=${base}/sever-${MC_VERSION}.jar
+
+if [ ! -f ${jar} ]; then
+    echo -n "Downloading Minecraft ${MC_VERSION} ... "
+    versionUrl=$(jq --raw-output --arg id ${MC_VERSION} '.versions[] | select(.id == $id) | .url' <<< ${manifest})
+    fileUrl=$(curl --silent --location "${versionUrl}" | jq --raw-output '.downloads.server.url')
+    wget --quiet --directory-prefix ${base} "${fileUrl}"
+    mv ${base}/server.jar ${jar}
     echo 'done'
-
-    if [ ${MC_FABRIC_VERSION:-latest} == latest ]; then
-      echo -n 'Identifying latest Fabric installer version ... '
-      MC_FABRIC_VERSION=$(xgrep -t -x '//metadata/versioning/release/text()' <<< ${metadata})
-      echo "${MC_FABRIC_VERSION}"
-    fi
-
-    if [ ! -f ${base}/fabric-installer-${MC_FABRIC_VERSION}.jar ]; then
-        echo -n "Downloading Fabric ${MC_FABRIC_VERSION} installer ... "
-        fileUrl="https://maven.fabricmc.net/net/fabricmc/fabric-installer/${MC_FABRIC_VERSION}/fabric-installer-${MC_FABRIC_VERSION}.jar"
-        wget --quiet --directory-prefix ${base} "${fileUrl}"
-        echo 'done'
-    fi
-
-    if [ ! -f ${base}/fabric-server-launch.jar -o ! -f ${base}/server.jar ]; then
-        echo "Installing Fabric ... "
-        java -jar ${base}/fabric-installer-${MC_FABRIC_VERSION}.jar server -dir ${base} -mcversion ${MC_VERSION} -downloadMinecraft
-    fi
-
-    if [ ! -f fabric-server-launcher.properties ]; then
-        echo "#$(date +'%a %b %d %H:%M:%S %Z %Y')" > fabric-server-launcher.properties
-        echo "serverJar=${base}/server.jar" >> fabric-server-launcher.properties
-    else
-        sed --in-place --regexp-extended \
-        --expression "s|^(serverJar=).*|\1${base}/server.jar|" \
-        fabric-server-launcher.properties
-    fi
-
-    jar=${base}/fabric-server-launch.jar
-else
-    if [ ! -f ${base}/server.jar ]; then
-        echo -n "Downloading Minecraft ${MC_VERSION} ... "
-        versionUrl=$(jq --raw-output --arg id ${MC_VERSION} '.versions[] | select(.id == $id) | .url' <<< ${manifest})
-        fileUrl=$(curl --silent --location "${versionUrl}" | jq --raw-output '.downloads.server.url')
-        wget --quiet --directory-prefix ${base} "${fileUrl}"
-        echo 'done'
-    fi
-
-    jar=${base}/server.jar
 fi
 
 if [ ! -f eula.txt -o ! -f server.properties ]; then
@@ -70,6 +37,59 @@ if [ ! -f eula.txt -o ! -f server.properties ]; then
     echo -e '\e[44mErrors and warnings regarding server.properties and/or eula.txt are expected.\e[49m'
     echo -e '\e[44m##############################\e[49m'
     $(which java) -jar ${jar} --initSettings
+fi
+
+if [ ${MC_PAPER:-false} == true ]; then
+    if [ ${MC_PAPER_BUILD:-latest} == latest ]; then
+        echo -n "Identifying latest Paper build for Minecraft ${MC_VERSION} ... "
+        buildsUrl="https://papermc.io/api/v2/projects/paper/versions/${MC_VERSION}"
+        MC_PAPER_BUILD=$(curl --silent --location "${buildsUrl}" | jq --raw-output '.builds[-1]')
+        echo "done (${MC_PAPER_BUILD})"
+    fi
+
+    flavor="Paper ${MC_VERSION}-${MC_PAPER_BUILD}"
+    jar=${base}/paper-${MC_VERSION}-${MC_PAPER_BUILD}.jar
+
+    if [ ! -f ${jar} ]; then
+        echo -n "Downloading Paper ${MC_VERSION}-${MC_PAPER_BUILD} ... "
+        fileUrl="https://papermc.io/api/v2/projects/paper/versions/${MC_VERSION}/builds/${MC_PAPER_BUILD}/downloads/paper-${MC_VERSION}-${MC_PAPER_BUILD}.jar"
+        wget --quiet --directory-prefix ${base} "${fileUrl}"
+        echo 'done'
+    fi
+elif [ ${MC_FABRIC:-false} == true ]; then
+    if [ ${MC_FABRIC_INSTALLER_VERSION:-latest} == latest ]; then
+        echo -n 'Identifying latest Fabric installer version ... '
+        metadata=$(curl --silent --location "https://maven.fabricmc.net/net/fabricmc/fabric-installer/maven-metadata.xml")
+        MC_FABRIC_INSTALLER_VERSION=$(xgrep -t -x '//metadata/versioning/release/text()' <<< ${metadata})
+        echo "done (${MC_FABRIC_INSTALLER_VERSION})"
+    fi
+
+    flavor="${flavor} via Fabric"
+    installer=${base}/fabric-installer-${MC_FABRIC_INSTALLER_VERSION}-${MC_VERSION}.jar
+    launcher=${base}/fabric-server-launch-${MC_VERSION}.jar
+
+    if [ ! -f ${installer} -o ! -f ${launcher} ]; then
+        echo -n "Downloading Fabric installer ${MC_FABRIC_INSTALLER_VERSION} ... "
+        fileUrl="https://maven.fabricmc.net/net/fabricmc/fabric-installer/${MC_FABRIC_INSTALLER_VERSION}/fabric-installer-${MC_FABRIC_INSTALLER_VERSION}.jar"
+        wget --quiet --directory-prefix ${base} "${fileUrl}"
+        mv ${base}/fabric-installer-${MC_FABRIC_INSTALLER_VERSION}.jar ${installer}
+        echo 'done'
+
+        echo "Installing Fabric for Minecraft ${MC_VERSION} ... "
+        $(which java) -jar ${installer} server -dir ${base} -mcversion ${MC_VERSION}
+        mv ${base}/fabric-server-launch.jar ${launcher}
+    fi
+
+    if [ ! -f fabric-server-launcher.properties ]; then
+        echo "#$(date +'%a %b %d %H:%M:%S %Z %Y')" > fabric-server-launcher.properties
+        echo "serverJar=${jar}" >> fabric-server-launcher.properties
+    else
+        sed --in-place --regexp-extended \
+        --expression "s|^(serverJar=).*|\1${jar}|" \
+        fabric-server-launcher.properties
+    fi
+
+    jar=${launcher}
 fi
 
 for file in eula.txt server.properties; do
@@ -102,6 +122,8 @@ port: ${MC_RCON_PORT:-25575}
 password: ${MC_RCON_PASSWORD}
 EOF
 fi
+
+echo "Starting ${flavor} ..."
 
 exec $(which java) \
     -Dserver.name=${MC_SERVER_NAME:-minecraft} \
