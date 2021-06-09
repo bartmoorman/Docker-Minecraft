@@ -7,7 +7,7 @@ WORKDIR /opt/minecraft
 
 RUN apt-get update \
  && apt-get install --yes --no-install-recommends \
-    default-jdk-headless \
+    openjdk-16-jdk-headless \
     git \
     wget \
  && wget --quiet "https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar" \
@@ -25,7 +25,7 @@ WORKDIR /var/lib/minecraft
 
 RUN apt-get update \
  && apt-get install --yes --no-install-recommends \
-    default-jre-headless \
+    openjdk-16-jre-headless \
     jq \
     vim \
  && arch=${TARGETARCH}${TARGETVARIANT} \
