@@ -34,7 +34,7 @@ fi
 if [ ! -f eula.txt -o ! -f server.properties ]; then
     echo -e '\e[44m##############################\e[49m'
     echo -e '\e[44mPerforming first-time setup.\e[49m'
-    echo -e '\e[44mErrors and warnings regarding server.properties and/or eula.txt are expected.\e[49m'
+    echo -e '\e[44mERRORs and WARNings regarding server.properties and/or eula.txt are expected.\e[49m'
     echo -e '\e[44m##############################\e[49m'
     $(which java) -jar ${jar} --initSettings
 fi
