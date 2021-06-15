@@ -12,6 +12,7 @@ RUN apt-get update \
  && apt-get install --yes --no-install-recommends \
     openjdk-16-jre-headless \
     jq \
+    unzip \
     vim \
     wget \
     xgrep \
