@@ -11,7 +11,7 @@ RUN apt-get update \
     git \
     wget \
  && wget --quiet "https://hub.spigotmc.org/jenkins/job/BuildTools/lastSuccessfulBuild/artifact/target/BuildTools.jar" \
- && java -jar -Xms512M -Xmx1024M BuildTools.jar --rev ${MC_VERSION#*-}
+ && java -jar -Xms512M -Xmx1024M BuildTools.jar --rev ${MC_VERSION}
 
 FROM bmoorman/ubuntu:focal
 
