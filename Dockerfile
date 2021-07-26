@@ -3,8 +3,8 @@ FROM bmoorman/ubuntu:focal
 ARG DEBIAN_FRONTEND=noninteractive \
     MC_SERVER_PORT=25565 \
     MC_RCON_PORT=25575 \
-    TARGETOS=linux \
-    TARGETARCH=amd64 \
+    TARGETOS \
+    TARGETARCH \
     TARGETVARIANT
 
 WORKDIR /var/lib/minecraft
