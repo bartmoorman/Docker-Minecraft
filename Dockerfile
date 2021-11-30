@@ -11,7 +11,7 @@ WORKDIR /var/lib/minecraft
 
 RUN apt-get update \
  && apt-get install --yes --no-install-recommends \
-    openjdk-16-jre-headless \
+    openjdk-17-jre-headless \
     jq \
     unzip \
     vim \
