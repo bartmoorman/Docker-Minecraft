@@ -96,8 +96,8 @@ fi
 
 if [ ${MC_WORLD_ZIP:-none} != none -a ! -f level.dat ]; then
     echo -n 'Downloading and extracting world zip'
-    wget --quiet --span-hosts --directory-prefix ${base} --output-document world.zip "${MC_WORLD_ZIP}"
-    unzip ${base}/world.zip
+    wget --quiet --content-disposition --span-hosts --directory-prefix ${base}/world "${MC_WORLD_ZIP}"
+    unzip ${base}/world/*.zip
     echo 'done'
 fi
 
