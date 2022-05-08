@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 if [ ${MC_EULA:-false} != true ]; then
     echo -e '\e[41m!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\e[49m'
     echo -e '\e[41mMC_EULA must always be set to true.\e[49m'
@@ -81,8 +81,10 @@ elif [ ${MC_FABRIC:-false} == true ]; then
     fi
 
     if [ ! -f fabric-server-launcher.properties ]; then
-        echo "#$(date +'%a %b %d %H:%M:%S %Z %Y')" > fabric-server-launcher.properties
-        echo "serverJar=${jar}" >> fabric-server-launcher.properties
+        cat << EOF > fabric-server-launcher.properties
+#$(date +'%a %b %d %H:%M:%S %Z %Y')
+serverJar=${jar}
+EOF
     else
         sed --in-place --regexp-extended \
         --expression "s|^(serverJar=).*|\1${jar}|" \
@@ -90,6 +92,13 @@ elif [ ${MC_FABRIC:-false} == true ]; then
     fi
 
     jar=${launcher}
+fi
+
+if [ -n ${MC_WORLD_ZIP} -a ! -f level.dat ]; then
+    echo -n 'Downloading and extracting world zip'
+    curl --silet --location --output ${base}/world.zip "${MC_WORLD_ZIP}"
+    unzip ${base}/world.zip
+    echo 'done'
 fi
 
 for file in eula.txt server.properties; do

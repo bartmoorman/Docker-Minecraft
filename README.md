@@ -35,6 +35,7 @@ volumes:
 |MC_MIN_MEM|Sets the minimum RAM allocated to java|`1G`|
 |MC_MAX_MEM|Sets the maximum RAM allocated to java|`2G`|
 |MC_JAVA_ARGS|Sets custom args passed to java|`<empty>`|
+|MC_WORLD_ZIP|Sets the URL for a world zip file|`<empty>`|
 
 #### Paper Environment Variables
 |Variable|Description|Default|
