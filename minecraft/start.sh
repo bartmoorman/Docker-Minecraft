@@ -94,11 +94,15 @@ EOF
     jar=${launcher}
 fi
 
-if [ ${MC_WORLD_ZIP:-none} != none -a ! -f level.dat ]; then
-    echo -n 'Downloading and extracting world zip'
-    wget --quiet --content-disposition --span-hosts --directory-prefix ${base}/world "${MC_WORLD_ZIP}"
-    unzip ${base}/world/*.zip
-    echo 'done'
+if [ ${MC_WORLD_ZIP:-none} != none ]; then
+    if [ -f ${MC_LEVEL_NAME:-world}/level.dat ]; then
+        echo -e '\e[41mRefusing to use world zip because level.dat already exists!\e[49m'
+    else
+        echo -n 'Downloading and extracting world zip ... '
+        wget --quiet --content-disposition --span-hosts --directory-prefix ${base}/world "${MC_WORLD_ZIP}"
+        unzip ${base}/world/*.zip -d ${MC_LEVEL_NAME:-world}
+        echo 'done'
+    fi
 fi
 
 for file in eula.txt server.properties; do
