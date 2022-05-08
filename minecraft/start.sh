@@ -94,7 +94,7 @@ EOF
     jar=${launcher}
 fi
 
-if [ -n ${MC_WORLD_ZIP} -a ! -f level.dat ]; then
+if [ ${MC_WORLD_ZIP:-none} != none -a ! -f level.dat ]; then
     echo -n 'Downloading and extracting world zip'
     curl --silet --location --output ${base}/world.zip "${MC_WORLD_ZIP}"
     unzip ${base}/world.zip
